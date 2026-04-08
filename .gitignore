@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+.pytest_cache/
+
+# Virtual environments / local envs
+.venv/
+venv/
+env/
+.env
+
+# Conda / notebooks
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+logs/
+*.log
+slurm-*.out
+slurm-*.err
+
+# Experiment outputs
+results/
+exp_out/
+output_text/
+routing_distribution/
+
+# Model weights / caches / datasets
+models/
+.cache/
+datasets_cache/
+bbh_cache/
+
+# Oscar scratch-style local mirrors
+scratch/
+
