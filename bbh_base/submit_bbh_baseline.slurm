@@ -10,7 +10,7 @@
 
 set -euo pipefail
 
-CODE_ROOT="/users/${USER}/interpretable-routing/bbh_base"
+CODE_ROOT="/oscar/scratch/${USER}/interpretable-routing/bbh_base"
 SCRATCH_ROOT="/oscar/scratch/${USER}/interpretable-routing"
 MODEL_DIR="${SCRATCH_ROOT}/models/allenai__OLMoE-1B-7B-0125-Instruct"
 HF_HOME="${SCRATCH_ROOT}/.cache/huggingface"
