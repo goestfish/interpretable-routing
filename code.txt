@@ -1,0 +1,25 @@
+bash setup_env.sh
+
+(
+module load anaconda3/2023.09-0-aqbc
+eval "$(conda shell.bash hook)"
+conda activate olmoe-bbh
+export PYTHONNOUSERSITE=1
+)
+
+bash download_olmoe_to_scratch.sh
+
+(ls /oscar/scratch/$USER/interpretable-routing/models/allenai__OLMoE-1B-7B-0125-Instruct)
+
+sbatch submit_bbh_baseline.slurm
+
+sbatch z_router/submit_train_z_router.slurm
+
+sbatch bbh_base/submit_bbh_z_router.slurm
+sbatch bbh_base/submit_analyze_z_usage.slurm
+
+python compare_bbh_results.py \
+  --baseline-dir results/bbh_baseline \
+  --z-dir results/bbh_z_router_cross_shared_2x2_block6_9_k8_bal0.005_perturb0.001 \
+  --output results/compare_baseline_vs_z_router_cross_shared_2x2_block6_9_k8_bal0.005_perturb0.001.json \
+  --z-usage-dir results/z_usage_z_router_cross_shared_2x2_block6_9_k8_bal0.005_perturb0.001

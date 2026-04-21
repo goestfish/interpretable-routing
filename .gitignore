@@ -2,17 +2,13 @@
 __pycache__/
 *.py[cod]
 *.so
-.Python
 .pytest_cache/
 
-# Virtual environments / local envs
+# Environments
 .venv/
 venv/
 env/
 .env
-
-# Conda / notebooks
-.ipynb_checkpoints/
 
 # OS / editor
 .DS_Store
@@ -20,24 +16,25 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Logs
+# Logs and Slurm outputs
 logs/
+**/logs/
 *.log
 slurm-*.out
 slurm-*.err
 
-# Experiment outputs
+# Generated outputs
 results/
-exp_out/
-output_text/
-routing_distribution/
+**/results/
+checkpoints/
+**/checkpoints/
 
-# Model weights / caches / datasets
+# Generated datasets and caches
+data/**/*.jsonl
+data/**/*.meta.json
+data/tulu3_reasoning/
 models/
 .cache/
 datasets_cache/
 bbh_cache/
-
-# Oscar scratch-style local mirrors
 scratch/
-

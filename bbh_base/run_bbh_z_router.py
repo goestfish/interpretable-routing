@@ -1,5 +1,6 @@
 import argparse
 import json
+import sys
 from pathlib import Path
 from statistics import mean
 
@@ -7,12 +8,18 @@ import torch
 from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from bbh_utils import BBH_TASKS, build_prompt, extract_answer, is_correct_prediction, load_task_data
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT / "z_router"))
+
+from z_router import install_z_router_blocks  # noqa: E402
+from bbh_utils import BBH_TASKS, build_prompt, extract_answer, is_correct_prediction, load_task_data  # noqa: E402
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-dir", required=True)
+    parser.add_argument("--checkpoint-dir", required=True)
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--cache-dir", required=True)
     parser.add_argument("--tasks", default="all")
@@ -21,6 +28,15 @@ def parse_args():
     parser.add_argument("--limit-per-task", type=int, default=None)
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--dtype", default="bfloat16", choices=["bfloat16", "float16", "float32"])
+    parser.add_argument("--start-layer", type=int, default=None)
+    parser.add_argument("--block-size", type=int, default=None)
+    parser.add_argument("--num-z", type=int, default=None)
+    parser.add_argument("--tau", type=float, default=None)
+    parser.add_argument("--soft-z", action="store_true")
+    parser.add_argument("--sharing", default=None, choices=["independent", "cross_layer_shared"])
+    parser.add_argument("--u-sharing", default=None, choices=["per_layer", "shared"])
+    parser.add_argument("--sharing-group-size", type=int, default=None)
+    parser.add_argument("--alpha-init", type=float, default=None)
     return parser.parse_args()
 
 
@@ -56,10 +72,66 @@ def generate_one(model, tokenizer, prompt: str, max_new_tokens: int, temperature
     return tokenizer.decode(new_tokens, skip_special_tokens=True)
 
 
+def load_z_router_metadata(checkpoint_dir: Path):
+    config_path = checkpoint_dir / "z_router_config.json"
+    if not config_path.exists():
+        raise FileNotFoundError(f"Missing z-router config: {config_path}")
+    return json.loads(config_path.read_text(encoding="utf-8"))
+
+
+def install_and_load_z_router(model, checkpoint_dir: Path, args):
+    metadata = load_z_router_metadata(checkpoint_dir)
+    installed_layers = metadata.get("installed_layers")
+    if not installed_layers:
+        raise ValueError("Checkpoint metadata is missing installed_layers.")
+
+    start_layer = args.start_layer if args.start_layer is not None else min(installed_layers)
+    block_size = args.block_size if args.block_size is not None else len(installed_layers)
+    num_z = args.num_z if args.num_z is not None else metadata["num_z"]
+    tau = args.tau if args.tau is not None else metadata.get("tau", 1.0)
+    soft_z = args.soft_z if args.soft_z else metadata.get("soft_z", False)
+    allow_router_update = metadata.get("allow_router_update", False)
+    sharing = args.sharing if args.sharing is not None else metadata.get("sharing", "independent")
+    u_sharing = args.u_sharing if args.u_sharing is not None else metadata.get("u_sharing", "per_layer")
+    sharing_group_size = (
+        args.sharing_group_size if args.sharing_group_size is not None else metadata.get("sharing_group_size")
+    )
+    alpha_init = args.alpha_init if args.alpha_init is not None else metadata.get("alpha_init", 1e-3)
+
+    install_z_router_blocks(
+        model=model,
+        start_layer=start_layer,
+        block_size=block_size,
+        num_z=num_z,
+        tau=tau,
+        hard=not soft_z,
+        allow_router_update=allow_router_update,
+        sharing=sharing,
+        u_sharing=u_sharing,
+        sharing_group_size=sharing_group_size,
+        alpha_init=alpha_init,
+    )
+
+    state_path = checkpoint_dir / "z_router_trainable_state.pt"
+    state = torch.load(state_path, map_location="cpu")
+    missing, unexpected = model.load_state_dict(state, strict=False)
+    remaining_unexpected = [name for name in unexpected if name in state]
+    if remaining_unexpected:
+        raise RuntimeError(f"Unexpected z-router checkpoint keys: {remaining_unexpected}")
+
+    return {
+        "checkpoint_dir": str(checkpoint_dir),
+        "metadata": metadata,
+        "loaded_keys": sorted(state.keys()),
+        "missing_key_count": len(missing),
+    }
+
+
 def main():
     args = parse_args()
     output_dir = Path(args.output_dir)
     cache_dir = Path(args.cache_dir)
+    checkpoint_dir = Path(args.checkpoint_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -76,6 +148,8 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(**load_kwargs)
     if not args.device.startswith("cuda"):
         model.to(args.device)
+
+    z_router_info = install_and_load_z_router(model, checkpoint_dir, args)
     model.eval()
 
     predictions_path = output_dir / "predictions.jsonl"
@@ -124,6 +198,7 @@ def main():
 
     summary = {
         "model_dir": args.model_dir,
+        "z_router": z_router_info,
         "num_tasks": len(tasks),
         "num_examples": len(all_records),
         "overall_accuracy": mean([record["correct"] for record in all_records]) if all_records else 0.0,
@@ -135,4 +210,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

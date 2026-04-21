@@ -10,12 +10,12 @@
 
 set -euo pipefail
 
-CODE_ROOT="/users/${USER}/interpretable-routing/bbh_base"
+CODE_ROOT="/users/${USER}/interpretable-routing/oscar_bbh_baseline"
 SCRATCH_ROOT="/oscar/scratch/${USER}/interpretable-routing"
 MODEL_DIR="${SCRATCH_ROOT}/models/allenai__OLMoE-1B-7B-0125-Instruct"
 HF_HOME="${SCRATCH_ROOT}/.cache/huggingface"
 BBH_CACHE="${SCRATCH_ROOT}/datasets/bbh_official"
-OUTPUT_DIR="${SCRATCH_ROOT}/results/bbh_baseline"
+OUTPUT_DIR="${CODE_ROOT}/results/bbh_baseline"
 ENV_NAME="${ENV_NAME:-olmoe-bbh}"
 ANACONDA_MODULE="${ANACONDA_MODULE:-anaconda3/2023.09-0-aqbc}"
 
