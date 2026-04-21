@@ -18,8 +18,8 @@ sbatch z_router/submit_train_z_router.slurm
 sbatch bbh_base/submit_bbh_z_router.slurm
 sbatch bbh_base/submit_analyze_z_usage.slurm
 
-python compare_bbh_results.py \
-  --baseline-dir results/bbh_baseline \
-  --z-dir results/bbh_z_router_cross_shared_2x2_block6_9_k8_bal0.005_perturb0.001 \
-  --output results/compare_baseline_vs_z_router_cross_shared_2x2_block6_9_k8_bal0.005_perturb0.001.json \
-  --z-usage-dir results/z_usage_z_router_cross_shared_2x2_block6_9_k8_bal0.005_perturb0.001
+python bbh_base/compare_bbh_results.py \
+  --baseline-dir bbh_base/results/bbh_baseline \
+  --z-dir bbh_base/results/z_router_cross_shared_2x2_block6_9_k8_tau1.0_bal0.001_perturb0.001_30k/bbh_eval \
+  --output bbh_base/results/z_router_cross_shared_2x2_block6_9_k8_tau1.0_bal0.001_perturb0.001_30k/compare_vs_baseline.json \
+  --z-usage-dir bbh_base/results/z_router_cross_shared_2x2_block6_9_k8_tau1.0_bal0.001_perturb0.001_30k/z_usage

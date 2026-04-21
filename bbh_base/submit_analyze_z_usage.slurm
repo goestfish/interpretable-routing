@@ -18,7 +18,8 @@ HF_HOME="${SCRATCH_ROOT}/.cache/huggingface"
 BBH_CACHE="${SCRATCH_ROOT}/datasets/bbh_official"
 CHECKPOINT_NAME="${CHECKPOINT_NAME:-z_router_cross_shared_2x2_block6_9_k8_tau1.0_bal0.001_perturb0.001_30k}"
 CHECKPOINT_DIR="${PROJECT_ROOT}/z_router/checkpoints/${CHECKPOINT_NAME}"
-OUTPUT_DIR="${CODE_ROOT}/results/z_usage_${CHECKPOINT_NAME}"
+EXPERIMENT_DIR="${CODE_ROOT}/results/${CHECKPOINT_NAME}"
+OUTPUT_DIR="${EXPERIMENT_DIR}/z_usage"
 TASKS="${TASKS:-boolean_expressions,formal_fallacies,logical_deduction_five_objects,tracking_shuffled_objects_seven_objects,multistep_arithmetic_two,reasoning_about_colored_objects,web_of_lies,word_sorting}"
 BATCH_SIZE="${BATCH_SIZE:-1}"
 MAX_LENGTH="${MAX_LENGTH:-1024}"
@@ -38,7 +39,7 @@ export HF_HOME
 export HUGGINGFACE_HUB_CACHE="${HF_HOME}/hub"
 export TRANSFORMERS_CACHE="${HF_HOME}/transformers"
 
-mkdir -p "${PROJECT_ROOT}/logs" "${OUTPUT_DIR}" "${HF_HOME}"
+mkdir -p "${PROJECT_ROOT}/logs" "${EXPERIMENT_DIR}" "${OUTPUT_DIR}" "${HF_HOME}"
 cd "${CODE_ROOT}"
 
 LIMIT_ARG=()
