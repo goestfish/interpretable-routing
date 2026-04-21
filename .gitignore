@@ -33,8 +33,13 @@ checkpoints/
 data/**/*.jsonl
 data/**/*.meta.json
 data/tulu3_reasoning/
+data/tulu3_subsets/
 models/
 .cache/
 datasets_cache/
 bbh_cache/
 scratch/
+
+code.txt
+*.tmp
+*.bak
